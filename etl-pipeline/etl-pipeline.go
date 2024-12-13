@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"os"
 )
@@ -10,13 +9,12 @@ import (
 type person struct {
 	name  string
 	email string
-	date  string // could update this to use a time package?
+	date  string
 }
 
 func main() {
 
 	fname, err := os.Open("data/data.csv")
-
 	peopleFromFile := []person{}
 
 	if err != nil {
@@ -24,8 +22,21 @@ func main() {
 	}
 
 	defer fname.Close()
-
 	read := csv.NewReader(fname)
+
+	final, err := os.Create("data/final.csv")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer final.Close()
+
+	wr := csv.NewWriter(final)
+
+	defer wr.Flush()
+	headers := []string{"name", "email", "date"}
+	wr.Write(headers)
 
 	for {
 		line, err := read.Read()
@@ -38,13 +49,11 @@ func main() {
 			panic(err)
 		}
 
-		personName, personEmail, personDate := line[0], line[1], line[2]
-
-		newPerson := person{personName, personEmail, personDate}
-		peopleFromFile = append(peopleFromFile, newPerson)
+		peopleFromFile = append(peopleFromFile, person{line[0], line[1], line[2]})
 	}
 
-	for i := 0; i < len(peopleFromFile); i++ {
-		fmt.Println(peopleFromFile[i])
+	for _, row := range peopleFromFile {
+		wr.Write([]string{row.name, row.email, row.date})
 	}
+
 }
