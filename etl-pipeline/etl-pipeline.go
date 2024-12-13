@@ -4,18 +4,21 @@ import (
 	"encoding/csv"
 	"io"
 	"os"
+	"strings"
 )
 
-type person struct {
-	name  string
-	email string
-	date  string
+type finalRow struct {
+	firstName string
+	lastName  string
+	userName  string
+	email     string
+	date      string
 }
 
 func main() {
 
 	fname, err := os.Open("data/data.csv")
-	peopleFromFile := []person{}
+	finalConstr := []finalRow{}
 
 	if err != nil {
 		panic(err)
@@ -35,7 +38,7 @@ func main() {
 	wr := csv.NewWriter(final)
 
 	defer wr.Flush()
-	headers := []string{"name", "email", "date"}
+	headers := []string{"firstName", "lastName", "userName", "email", "date"}
 	wr.Write(headers)
 
 	for {
@@ -49,11 +52,42 @@ func main() {
 			panic(err)
 		}
 
-		peopleFromFile = append(peopleFromFile, person{line[0], line[1], line[2]})
+		if line[0] == "name" {
+			continue
+		}
+
+		// splitting name into first and last, while creating a username
+		splitName := strings.Split(line[0], " ")
+		// firstName := splitName[0]
+		// lastName := splitName[1]
+		// userArr := []string{firstName[:1], lastName[1:]}
+		// userName := strings.Join(userArr, "")
+		// userName = strings.ToLower(userName)
+
+		nameToWrite := processName(splitName)
+
+		finalConstr = append(finalConstr, finalRow{
+			firstName: nameToWrite[0],
+			lastName:  nameToWrite[1],
+			userName:  nameToWrite[2],
+			email:     line[1],
+			date:      line[2],
+		})
 	}
 
-	for _, row := range peopleFromFile {
-		wr.Write([]string{row.name, row.email, row.date})
+	for _, row := range finalConstr {
+		wr.Write([]string{row.firstName, row.lastName, row.userName, row.email, row.date})
 	}
 
+}
+
+func processName(arrName []string) []string {
+	firstName := arrName[0]
+	lastName := arrName[1]
+	userArr := []string{firstName[:1], lastName[1:]}
+	userName := strings.Join(userArr, "")
+	userName = strings.ToLower(userName)
+
+	finalArr := []string{firstName, lastName, userName}
+	return finalArr
 }
