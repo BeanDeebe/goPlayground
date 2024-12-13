@@ -12,6 +12,7 @@ type finalRow struct {
 	lastName  string
 	userName  string
 	email     string
+	domain    string
 	date      string
 }
 
@@ -38,7 +39,7 @@ func main() {
 	wr := csv.NewWriter(final)
 
 	defer wr.Flush()
-	headers := []string{"firstName", "lastName", "userName", "email", "date"}
+	headers := []string{"firstName", "lastName", "userName", "email", "domain", "date"}
 	wr.Write(headers)
 
 	for {
@@ -56,27 +57,11 @@ func main() {
 			continue
 		}
 
-		// splitting name into first and last, while creating a username
-		splitName := strings.Split(line[0], " ")
-		// firstName := splitName[0]
-		// lastName := splitName[1]
-		// userArr := []string{firstName[:1], lastName[1:]}
-		// userName := strings.Join(userArr, "")
-		// userName = strings.ToLower(userName)
-
-		nameToWrite := processName(splitName)
-
-		finalConstr = append(finalConstr, finalRow{
-			firstName: nameToWrite[0],
-			lastName:  nameToWrite[1],
-			userName:  nameToWrite[2],
-			email:     line[1],
-			date:      line[2],
-		})
+		finalConstr = append(finalConstr, processRow(line))
 	}
 
 	for _, row := range finalConstr {
-		wr.Write([]string{row.firstName, row.lastName, row.userName, row.email, row.date})
+		wr.Write([]string{row.firstName, row.lastName, row.userName, row.email, row.domain, row.date})
 	}
 
 }
@@ -90,4 +75,26 @@ func processName(arrName []string) []string {
 
 	finalArr := []string{firstName, lastName, userName}
 	return finalArr
+}
+
+func processRow(arrRow []string) finalRow {
+	splitName := strings.Split(arrRow[0], " ")
+	nameToWrite := processName(splitName)
+	email := "null"
+	domain := "null"
+
+	if len(arrRow[1]) > 0 {
+		email = arrRow[1]
+		domain = strings.Split(arrRow[1], "@")[1]
+	}
+
+	return finalRow{
+		firstName: nameToWrite[0],
+		lastName:  nameToWrite[1],
+		userName:  nameToWrite[2],
+		email:     email,
+		domain:    domain,
+		date:      arrRow[2],
+	}
+
 }
